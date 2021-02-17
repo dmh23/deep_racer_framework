@@ -168,7 +168,7 @@ class Framework:
             self.distance_from_closest_waypoint = distance_to_next_waypoint
 
         self.distance_from_center = float(params[ParamNames.DISTANCE_FROM_CENTER])
-        self.distance_from_edge = float(max(0.0, params[ParamNames.TRACK_WIDTH]) - self.distance_from_center)
+        self.distance_from_edge = float(max(0.0, params[ParamNames.TRACK_WIDTH]) / 2 - self.distance_from_center)
 
         self.is_left_of_center = bool(params[ParamNames.IS_LEFT_OF_CENTER])
         self.is_right_of_center = not self.is_left_of_center
@@ -192,26 +192,27 @@ class Framework:
             self._history = []
 
     def print_debug(self):
-        print("x                              ", self.x)
-        print("y                              ", self.y)
-        print("all_wheels_on_track            ", self.all_wheels_on_track)
-        print("previous_waypoint_id           ", self.previous_waypoint_id)
-        print("previous_waypoint_x            ", self.previous_waypoint_x)
-        print("previous_waypoint_y            ", self.previous_waypoint_y)
-        print("next_waypoint_id               ", self.next_waypoint_id)
-        print("next_waypoint_x                ", self.next_waypoint_x)
-        print("next_waypoint_y                ", self.next_waypoint_y)
-        print("closest_waypoint_id            ", self.closest_waypoint_id)
-        print("closest_waypoint_x             ", self.closest_waypoint_x)
-        print("closest_waypoint_y             ", self.closest_waypoint_y)
+        print("steps                   ", self.steps)
+        print("x                       ", self.x)
+        print("y                       ", self.y)
+        print("all_wheels_on_track     ", self.all_wheels_on_track)
+        print("previous_waypoint_id    ", self.previous_waypoint_id)
+        print("previous_waypoint_x     ", self.previous_waypoint_x)
+        print("previous_waypoint_y     ", self.previous_waypoint_y)
+        print("next_waypoint_id        ", self.next_waypoint_id)
+        print("next_waypoint_x         ", self.next_waypoint_x)
+        print("next_waypoint_y         ", self.next_waypoint_y)
+        print("closest_waypoint_id     ", self.closest_waypoint_id)
+        print("closest_waypoint_x      ", self.closest_waypoint_x)
+        print("closest_waypoint_y      ", self.closest_waypoint_y)
         print("distance_from_closest_waypoint ", self.distance_from_closest_waypoint)
-        print("distance_from_center           ", self.distance_from_center)
-        print("distance_from_edge             ", self.distance_from_edge)
-        print("is_left_of_center              ", self.is_left_of_center)
-        print("is_right_of_center             ", self.is_right_of_center)
-        print("is_crashed                     ", self.is_crashed)
-        print("is_off_track                   ", self.is_off_track)
-        print("is_reversed                    ", self.is_reversed)
+        print("distance_from_center    ", self.distance_from_center)
+        print("distance_from_edge      ", self.distance_from_edge)
+        print("is_left_of_center       ", self.is_left_of_center)
+        print("is_right_of_center      ", self.is_right_of_center)
+        print("is_crashed              ", self.is_crashed)
+        print("is_off_track            ", self.is_off_track)
+        print("is_reversed             ", self.is_reversed)
 
 
 # -------------------------------------------------------------------------------
@@ -240,4 +241,5 @@ framework_global = None
 # -------------------------------------------------------------------------------
 
 def get_reward(framework: Framework):
+    framework.print_debug()
     return framework.steps * 2
