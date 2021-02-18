@@ -154,9 +154,9 @@ class Framework:
         # Derived ideas :
         #
         #                 action_sequence_length
-        #                 direction_of_travel    (from previous step history)
-        #                 actual_speed   (from previous step history)
-        #                 skew    (difference between direction of travel and heading)
+        #                 true_bearing    (from previous step history)
+        #                 track_speed  &  progress_speed   (from previous step history)
+        #                 skew    (difference between true_bearing and heading)
         #                 is_skidding   / is_spinning   / is_skidding_left    / is_skidding_right
         #                 has_skidded  / has_spun   (has is_skidding or is_spinning been True any time this episode?)
         #
