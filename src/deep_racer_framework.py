@@ -42,6 +42,11 @@ class ParamNames:
     OBJECT_IN_CAMERA = "object_in_camera"
 
 
+class RealWorld:
+    STEPS_PER_SECOND = 15
+    CAR_WIDTH = 0.21
+
+
 # -------------------------------------------------------------------------------
 #
 # GEOMETRY
@@ -126,22 +131,37 @@ class Framework:
         self.distance_from_closest_waypoint = 0.0
         self.distance_from_center = 0.0
         self.distance_from_edge = 0.0
+        self.distance_from_extreme_edge = 0.0
         self.is_left_of_center = False
         self.is_right_of_center = False
         self.is_crashed = False
         self.is_off_track = False
         self.is_reversed = False
-
-        # Ideas to include estimated finishing steps / time in secs
-        # Actual travel direction as well as "heading" (and corresponding skew)
-        # Hence also whether spinning is or has occurred (include history of whether it has gone wrong til end of episode)
-        # Actual speed as well as action speed
-        # Actions, including left & right steering flags for simplicity
-
-
-
-
         self.steps = 0
+        self.is_final_step = False
+        self.progress = 0.0
+        self.predicted_lap_time = 0.0
+        self.waypoints = []
+        self.track_length = 0.0
+        self.track_width = 0.0
+        self.action_speed = 0.0
+        self.action_steering_angle = 0.0
+        self.is_steering_left = False
+        self.is_steering_right = False
+        self.is_steering_straight = False
+        self.heading = 0.0
+
+        # Derived ideas :
+        #
+        #                 action_sequence_length
+        #                 direction_of_travel    (from previous step history)
+        #                 actual_speed   (from previous step history)
+        #                 skew    (difference between direction of travel and heading)
+        #                 is_skidding   / is_spinning   / is_skidding_left    / is_skidding_right
+        #                 has_skidded  / has_spun   (has is_skidding or is_spinning been True any time this episode?)
+        #
+        # projection_distance - WHAT'S THIS????
+        #
 
     def process_params(self, params):
         self.x = float(params[ParamNames.X])
@@ -168,7 +188,9 @@ class Framework:
             self.distance_from_closest_waypoint = distance_to_next_waypoint
 
         self.distance_from_center = float(params[ParamNames.DISTANCE_FROM_CENTER])
-        self.distance_from_edge = float(max(0.0, params[ParamNames.TRACK_WIDTH]) / 2 - self.distance_from_center)
+        self.distance_from_edge = float(max(0.0, params[ParamNames.TRACK_WIDTH] / 2 - self.distance_from_center))
+        self.distance_from_extreme_edge =\
+            float(max(0.0, (params[ParamNames.TRACK_WIDTH] + RealWorld.CAR_WIDTH) / 2 - self.distance_from_center))
 
         self.is_left_of_center = bool(params[ParamNames.IS_LEFT_OF_CENTER])
         self.is_right_of_center = not self.is_left_of_center
@@ -177,22 +199,32 @@ class Framework:
         self.is_off_track = bool(params[ParamNames.IS_OFFTRACK])
         self.is_reversed = bool(params[ParamNames.IS_REVERSED])
 
+        self.steps = int(round(params[ParamNames.STEPS]))
+        self.progress = float(params[ParamNames.PROGRESS])
+        self.is_final_step = self.progress == 100.0 or self.is_crashed or self.is_off_track or self.is_reversed
+        if self.progress > 0:
+            self.predicted_lap_time = round(100 / self.progress * self.steps / RealWorld.STEPS_PER_SECOND, 2)
+        else:
+            self.predicted_lap_time = 0.0
+
+        self.waypoints = params[ParamNames.WAYPOINTS]
+        self.track_length = params[ParamNames.TRACK_LENGTH]
+        self.track_width = params[ParamNames.TRACK_WIDTH]
+
+        self.action_speed = params[ParamNames.SPEED]
+        self.action_steering_angle = params[ParamNames.STEERING_ANGLE]
+
+        self.is_steering_straight = abs(self.action_steering_angle) < 0.01
+        self.is_steering_left = self.action_steering_angle > 0 and not self.is_steering_straight
+        self.is_steering_right = self.action_steering_angle < 0 and not self.is_steering_straight
+
         ##### Heading etc. comes next, remember history is not changed yet - those calcuations go at the end ...
 
-        self.steps = int(round(params[ParamNames.STEPS]))
-
-
-
-        # Cover up new bug in DeepRacer itself
-        if self.steps == 0:
-            self.steps = 1
-
-        if self.steps == 1:
+        if self.steps <= 2:
             # There may be some other history info to go here too that will have to be reset
             self._history = []
 
     def print_debug(self):
-        print("steps                   ", self.steps)
         print("x                       ", self.x)
         print("y                       ", self.y)
         print("all_wheels_on_track     ", self.all_wheels_on_track)
@@ -208,11 +240,27 @@ class Framework:
         print("distance_from_closest_waypoint ", self.distance_from_closest_waypoint)
         print("distance_from_center    ", self.distance_from_center)
         print("distance_from_edge      ", self.distance_from_edge)
+        print("distance_from_extreme_edge     ", self.distance_from_extreme_edge)
         print("is_left_of_center       ", self.is_left_of_center)
         print("is_right_of_center      ", self.is_right_of_center)
         print("is_crashed              ", self.is_crashed)
         print("is_off_track            ", self.is_off_track)
         print("is_reversed             ", self.is_reversed)
+        print("steps                   ", self.steps)
+        print("is_final_step           ", self.is_final_step)
+        print("predicted_lap_time      ", self.predicted_lap_time)
+        print("progress                ", self.progress)
+        print("waypoints  (SIZE)       ", len(self.waypoints))
+        print("track_length            ", self.track_length)
+        print("track_width             ", self.track_width)
+        print("action_speed            ", self.action_speed)
+        print("action_steering_angle   ", self.action_steering_angle)
+        print("is_steering_left        ", self.is_steering_left)
+        print("is_steering_right       ", self.is_steering_right)
+        print("is_steering_straight    ", self.is_steering_straight)
+
+
+
 
 
 # -------------------------------------------------------------------------------
@@ -226,9 +274,13 @@ def reward_function(params):
     if not framework_global:
         framework_global = Framework(params)
     framework_global.process_params(params)
-    return float(get_reward(framework_global))
-
-    ###### TODO - error if zero or negative #######
+    raw_reward = float(get_reward(framework_global))
+    if raw_reward > 0:
+        return raw_reward
+    else:
+        tiny_reward = 0.0001
+        print("WARNING - Invalid reward " + str(raw_reward) + " replaced with " + str(tiny_reward))
+        return tiny_reward
 
 
 framework_global = None
