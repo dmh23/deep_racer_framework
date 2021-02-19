@@ -105,6 +105,24 @@ def get_processed_waypoints(waypoints):
 
 # -------------------------------------------------------------------------------
 #
+# REMEMBER A PREVIOUS STEP IN THIS EPISODE
+#
+# -------------------------------------------------------------------------------
+
+class HistoricStep:
+    def __init__(self, framework, previous_step):
+        self.action_speed = framework.action_speed
+        self.action_steering_angle = framework.action_steering_angle
+        self.closest_waypoint_id = framework.closest_waypoint_id
+
+        self.action_sequence_length = 1
+        if previous_step:
+            if (previous_step.action_speed == self.action_speed and
+                    previous_step.action_steering_angle == self.action_steering_angle):
+                self.action_sequence_length = previous_step.action_sequence_length + 1
+
+# -------------------------------------------------------------------------------
+#
 # FRAMEWORK
 #
 # -------------------------------------------------------------------------------
@@ -146,6 +164,7 @@ class Framework:
         self.track_width = 0.0
         self.action_speed = 0.0
         self.action_steering_angle = 0.0
+        self.action_sequence_length = 0
         self.is_steering_left = False
         self.is_steering_right = False
         self.is_steering_straight = False
@@ -218,47 +237,54 @@ class Framework:
         self.is_steering_left = self.action_steering_angle > 0 and not self.is_steering_straight
         self.is_steering_right = self.action_steering_angle < 0 and not self.is_steering_straight
 
-        ##### Heading etc. comes next, remember history is not changed yet - those calcuations go at the end ...
+        #
+        # Record history
+        #
 
-        if self.steps <= 2:
-            # There may be some other history info to go here too that will have to be reset
+        if self.steps <= 2 and len(self._history) > 2:
             self._history = []
 
-    def print_debug(self):
-        print("x                       ", self.x)
-        print("y                       ", self.y)
-        print("all_wheels_on_track     ", self.all_wheels_on_track)
-        print("previous_waypoint_id    ", self.previous_waypoint_id)
-        print("previous_waypoint_x     ", self.previous_waypoint_x)
-        print("previous_waypoint_y     ", self.previous_waypoint_y)
-        print("next_waypoint_id        ", self.next_waypoint_id)
-        print("next_waypoint_x         ", self.next_waypoint_x)
-        print("next_waypoint_y         ", self.next_waypoint_y)
-        print("closest_waypoint_id     ", self.closest_waypoint_id)
-        print("closest_waypoint_x      ", self.closest_waypoint_x)
-        print("closest_waypoint_y      ", self.closest_waypoint_y)
-        print("distance_from_closest_waypoint ", self.distance_from_closest_waypoint)
-        print("distance_from_center    ", self.distance_from_center)
-        print("distance_from_edge      ", self.distance_from_edge)
-        print("distance_from_extreme_edge     ", self.distance_from_extreme_edge)
-        print("is_left_of_center       ", self.is_left_of_center)
-        print("is_right_of_center      ", self.is_right_of_center)
-        print("is_crashed              ", self.is_crashed)
-        print("is_off_track            ", self.is_off_track)
-        print("is_reversed             ", self.is_reversed)
-        print("steps                   ", self.steps)
-        print("is_final_step           ", self.is_final_step)
-        print("predicted_lap_time      ", self.predicted_lap_time)
-        print("progress                ", self.progress)
-        print("waypoints  (SIZE)       ", len(self.waypoints))
-        print("track_length            ", self.track_length)
-        print("track_width             ", self.track_width)
-        print("action_speed            ", self.action_speed)
-        print("action_steering_angle   ", self.action_steering_angle)
-        print("is_steering_left        ", self.is_steering_left)
-        print("is_steering_right       ", self.is_steering_right)
-        print("is_steering_straight    ", self.is_steering_straight)
+        if self._history:
+            previous_step = self._history[-1]
+        else:
+            previous_step = None
 
+        this_step = HistoricStep(self, previous_step)
+        self._history.append(this_step)
+
+        #
+        # Calculations that use the history
+        #
+
+        self.action_sequence_length = this_step.action_sequence_length
+
+
+    def print_debug(self):
+        #print("x, y                    ", round(self.x, 3), round(self.y, 3))
+        #print("all_wheels_on_track     ", self.all_wheels_on_track)
+        #print("previous_waypoint_id    ", self.previous_waypoint_id)
+        #print("previous_waypoint_x, y  ", round(self.previous_waypoint_x, 3), round(self.previous_waypoint_y, 3))
+        #print("next_waypoint_id        ", self.next_waypoint_id)
+        #print("next_waypoint_x, y      ", round(self.next_waypoint_x, 3), round(self.next_waypoint_y, 3))
+        #print("closest_waypoint_id     ", self.closest_waypoint_id)
+        #print("closest_waypoint_x, y   ", round(self.closest_waypoint_x, 3), round(self.closest_waypoint_y, 3))
+        #print("distance_from_closest_waypoint ", round(self.distance_from_closest_waypoint, 2))
+        print("distance_from_center    ", round(self.distance_from_center, 2))
+        print("distance_from_edge      ", round(self.distance_from_edge, 2))
+        print("distance_from_extreme_edge     ", round(self.distance_from_extreme_edge, 2))
+        print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
+        print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
+        print("is_off_track            ", self.is_off_track)
+        print("steps, is_final_step    ", self.steps, self.is_final_step)
+        print("predicted_lap_time      ", round(self.predicted_lap_time, 2))
+        print("progress                ", round(self.progress, 2))
+        #print("waypoints  (SIZE)       ", len(self.waypoints))
+        #print("track_length, width     ", round(self.track_length, 2), round(self.track_width, 2))
+        print("action_speed            ", round(self.action_speed, 2))
+        print("action_steering_angle   ", round(self.action_steering_angle, 1))
+        print("action_sequence_length  ", self.action_sequence_length)
+        print("is_steering_left/right  ", self.is_steering_left, self.is_steering_right)
+        print("is_steering_straight    ", self.is_steering_straight)
 
 
 
