@@ -4,6 +4,13 @@
 # Version 1.0
 #
 
+#
+# ISSUES - Initial track speed is artificially high
+#          Progress speed is still not matching well with DRG
+#          Handle repeated location - bearing of 0 messes up skew and slide
+#
+
+
 import math
 
 
@@ -111,15 +118,17 @@ def get_processed_waypoints(waypoints):
 
 class HistoricStep:
     def __init__(self, framework, previous_step):
+        self.x = framework.x
+        self.y = framework.y
+        self.progress = framework.progress
         self.action_speed = framework.action_speed
         self.action_steering_angle = framework.action_steering_angle
         self.closest_waypoint_id = framework.closest_waypoint_id
-
-        self.action_sequence_length = 1
         if previous_step:
-            if (previous_step.action_speed == self.action_speed and
-                    previous_step.action_steering_angle == self.action_steering_angle):
-                self.action_sequence_length = previous_step.action_sequence_length + 1
+            self.distance = get_distance_between_points((previous_step.x, previous_step.y), (self.x, self.y))
+        else:
+            self.distance = framework.progress / 100 * framework.track_length
+
 
 # -------------------------------------------------------------------------------
 #
@@ -156,6 +165,7 @@ class Framework:
         self.is_off_track = False
         self.is_reversed = False
         self.steps = 0
+        self.time = 0.0
         self.is_final_step = False
         self.progress = 0.0
         self.predicted_lap_time = 0.0
@@ -169,14 +179,20 @@ class Framework:
         self.is_steering_right = False
         self.is_steering_straight = False
         self.heading = 0.0
+        self.track_bearing = 0.0
+        self.true_bearing = 0.0
+        self.slide = 0.0
+        self.skew = 0.0
+        self.max_slide = 0.0
+        self.max_skew = 0.0
+        self.total_distance = 0.0
+        self.track_speed = 0.0
+        self.progress_speed = 0.0
+
 
         # Derived ideas :
         #
-        #                 action_sequence_length
-        #                 true_bearing    (from previous step history)
-        #                 track_speed  &  progress_speed   (from previous step history)
-        #                 skew    (difference between true_bearing and heading)
-        #                 is_skidding   / is_spinning   / is_skidding_left    / is_skidding_right
+        #                    / is_spinning
         #                 has_skidded  / has_spun   (has is_skidding or is_spinning been True any time this episode?)
         #
         # projection_distance - WHAT'S THIS????
@@ -219,6 +235,7 @@ class Framework:
         self.is_reversed = bool(params[ParamNames.IS_REVERSED])
 
         self.steps = int(round(params[ParamNames.STEPS]))
+        self.time = self.steps / RealWorld.STEPS_PER_SECOND
         self.progress = float(params[ParamNames.PROGRESS])
         self.is_final_step = self.progress == 100.0 or self.is_crashed or self.is_off_track or self.is_reversed
         if self.progress > 0:
@@ -236,6 +253,11 @@ class Framework:
         self.is_steering_straight = abs(self.action_steering_angle) < 0.01
         self.is_steering_left = self.action_steering_angle > 0 and not self.is_steering_straight
         self.is_steering_right = self.action_steering_angle < 0 and not self.is_steering_straight
+
+        self.heading = params[ParamNames.HEADING]
+        self.track_bearing = get_bearing_between_points(
+            (self.previous_waypoint_x, self.previous_waypoint_y),
+            (self.next_waypoint_x, self.next_waypoint_y))
 
         #
         # Record history
@@ -255,9 +277,40 @@ class Framework:
         #
         # Calculations that use the history
         #
+        if previous_step:
+            self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
+            if (previous_step.action_speed == self.action_speed and
+                    previous_step.action_steering_angle == self.action_steering_angle):
+                self.action_sequence_length += 1
+            else:
+                self.action_sequence_length = 1
 
-        self.action_sequence_length = this_step.action_sequence_length
+            speed_calculate_steps = self._history[-7:]
+            speed_calculate_distance = sum(s.distance for s in speed_calculate_steps)
+            speed_calculate_time = len(speed_calculate_steps) / RealWorld.STEPS_PER_SECOND
+            self.track_speed = speed_calculate_distance / speed_calculate_time
 
+            progress_speed_distance = (self.progress - speed_calculate_steps[0].progress) / 100 * self.track_length
+            progress_speed_calculate_time = (len(speed_calculate_steps) - 1) / RealWorld.STEPS_PER_SECOND
+            self.progress_speed = progress_speed_distance / progress_speed_calculate_time
+
+        else:
+            self.action_sequence_length = 1
+            self.true_bearing = self.heading
+            self.progress_speed = self.total_distance / self.time
+            self.track_speed = self.progress_speed
+            self.total_distance = 0.0
+            self.max_skew = 0.0
+            self.max_slide = 0.0
+
+        self.slide = get_turn_between_directions(self.heading, self.true_bearing)
+        self.skew = get_turn_between_directions(self.track_bearing, self.true_bearing)
+        self.total_distance += this_step.distance
+
+        if abs(self.slide) > abs(self.max_slide):
+            self.max_slide = self.slide
+        if abs(self.skew) > abs(self.max_skew):
+            self.max_skew = self.skew
 
     def print_debug(self):
         #print("x, y                    ", round(self.x, 3), round(self.y, 3))
@@ -269,13 +322,14 @@ class Framework:
         #print("closest_waypoint_id     ", self.closest_waypoint_id)
         #print("closest_waypoint_x, y   ", round(self.closest_waypoint_x, 3), round(self.closest_waypoint_y, 3))
         #print("distance_from_closest_waypoint ", round(self.distance_from_closest_waypoint, 2))
-        print("distance_from_center    ", round(self.distance_from_center, 2))
-        print("distance_from_edge      ", round(self.distance_from_edge, 2))
-        print("distance_from_extreme_edge     ", round(self.distance_from_extreme_edge, 2))
-        print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
-        print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
-        print("is_off_track            ", self.is_off_track)
+        #print("distance_from_center    ", round(self.distance_from_center, 2))
+        #print("distance_from_edge      ", round(self.distance_from_edge, 2))
+        #print("distance_from_extreme_edge     ", round(self.distance_from_extreme_edge, 2))
+        #print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
+        #print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
+        #print("is_off_track            ", self.is_off_track)
         print("steps, is_final_step    ", self.steps, self.is_final_step)
+        print("time                    ", round(self.time, 2))
         print("predicted_lap_time      ", round(self.predicted_lap_time, 2))
         print("progress                ", round(self.progress, 2))
         #print("waypoints  (SIZE)       ", len(self.waypoints))
@@ -283,10 +337,17 @@ class Framework:
         print("action_speed            ", round(self.action_speed, 2))
         print("action_steering_angle   ", round(self.action_steering_angle, 1))
         print("action_sequence_length  ", self.action_sequence_length)
-        print("is_steering_left/right  ", self.is_steering_left, self.is_steering_right)
-        print("is_steering_straight    ", self.is_steering_straight)
+        #print("is_steering_left/right  ", self.is_steering_left, self.is_steering_right)
+        #print("is_steering_straight    ", self.is_steering_straight)
 
-
+        print("heading                 ", round(self.heading, 2))
+        print("track_bearing           ", round(self.track_bearing, 2))
+        print("true_bearing            ", round(self.true_bearing, 2))
+        print("slide  / max_slide      ", round(self.slide, 2), round(self.max_slide, 2))
+        print("skew / max_skew         ", round(self.skew, 2), round(self.max_skew, 2))
+        print("total_distance          ", round(self.total_distance, 2))
+        print("track_speed             ", round(self.track_speed, 2))
+        print("progress_speed          ", round(self.progress_speed, 2))
 
 
 # -------------------------------------------------------------------------------
