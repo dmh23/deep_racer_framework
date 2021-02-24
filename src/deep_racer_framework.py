@@ -3,6 +3,8 @@
 #
 # Version 1.0
 #
+# Copyright (c) 2021 dmh23
+#
 
 #
 # ISSUES - Initial track speed is artificially high
@@ -127,7 +129,7 @@ class HistoricStep:
         if previous_step:
             self.distance = get_distance_between_points((previous_step.x, previous_step.y), (self.x, self.y))
         else:
-            self.distance = framework.progress / 100 * framework.track_length
+            self.distance = 0.0     # Causes issues if we use: framework.progress / 100 * framework.track_length
 
 
 # -------------------------------------------------------------------------------
@@ -278,14 +280,19 @@ class Framework:
         # Calculations that use the history
         #
         if previous_step:
-            self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
+            if previous_step.x == self.x and previous_step.y == self.y:
+                previous_different_step = self._history[-3]
+                self.true_bearing = get_bearing_between_points(
+                    (previous_different_step.x, previous_different_step.y), (self.x, self.y))
+            else:
+                self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
             if (previous_step.action_speed == self.action_speed and
                     previous_step.action_steering_angle == self.action_steering_angle):
                 self.action_sequence_length += 1
             else:
                 self.action_sequence_length = 1
 
-            speed_calculate_steps = self._history[-7:]
+            speed_calculate_steps = self._history[-6:]
             speed_calculate_distance = sum(s.distance for s in speed_calculate_steps)
             speed_calculate_time = len(speed_calculate_steps) / RealWorld.STEPS_PER_SECOND
             self.track_speed = speed_calculate_distance / speed_calculate_time
@@ -293,12 +300,11 @@ class Framework:
             progress_speed_distance = (self.progress - speed_calculate_steps[0].progress) / 100 * self.track_length
             progress_speed_calculate_time = (len(speed_calculate_steps) - 1) / RealWorld.STEPS_PER_SECOND
             self.progress_speed = progress_speed_distance / progress_speed_calculate_time
-
         else:
             self.action_sequence_length = 1
             self.true_bearing = self.heading
-            self.progress_speed = self.total_distance / self.time
-            self.track_speed = self.progress_speed
+            self.progress_speed = 0.0
+            self.track_speed = 0.0
             self.total_distance = 0.0
             self.max_skew = 0.0
             self.max_slide = 0.0
