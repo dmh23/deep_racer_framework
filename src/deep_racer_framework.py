@@ -174,6 +174,8 @@ class Framework:
         self.waypoints = []
         self.track_length = 0.0
         self.track_width = 0.0
+        self.track_speed = 0.0
+        self.progress_speed = 0.0
         self.action_speed = 0.0
         self.action_steering_angle = 0.0
         self.action_sequence_length = 0
@@ -188,8 +190,7 @@ class Framework:
         self.max_slide = 0.0
         self.max_skew = 0.0
         self.total_distance = 0.0
-        self.track_speed = 0.0
-        self.progress_speed = 0.0
+
 
 
         # Derived ideas :
