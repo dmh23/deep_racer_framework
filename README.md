@@ -1,19 +1,19 @@
 # deep_racer_framework
 
 | Name | Datatype | Range | Accuracy | Units | AWS Param |
-| ---- | -------- | ----- | -------- | ----- | --------- |
-| x | float | | Exact | Meters | x |
-| y | float | | Exact | Meters | y |
-| all_wheels_on_track | bool | | Exact | | all_wheels_on_track |
-| previous_waypoint_id | int | \>=0 |
-| previous_waypoint_x | float       |
-| previous_waypoint_y | float       |
-| next_waypoint_id | int |
-| next_waypoint_x | float       |
-| next_waypoint_y | float       |
-| closest_waypoint_id | int |
-| closest_waypoint_x | float       |
-| closest_waypoint_y | float       |
+| :---- | :-------- | :----- | :-------- | :----- | :--------- |
+| x | float | Any | Exact | Meters | x |
+| y | float | Any | Exact | Meters | y |
+| all_wheels_on_track | bool | True or False | Exact | | all_wheels_on_track |
+| previous_waypoint_id | int | \>=0 | Exact | | closest_waypoints[0] |
+| previous_waypoint_x | float |
+| previous_waypoint_y | float |
+| next_waypoint_id | int | \>=0 | Exact | | closest_waypoints[1] |
+| next_waypoint_x | float |
+| next_waypoint_y | float |
+| closest_waypoint_id | int | \>=0 | Exact | |
+| closest_waypoint_x | float |
+| closest_waypoint_y | float |
 | distance_from_closest_waypoint | float       |
 | distance_from_center | float       |
 | distance_from_edge | float       |
