@@ -1,11 +1,10 @@
 # deep_racer_framework
 
-| Name | Datatype | Range | Accuracy | Unit of Measure | Original Param | Description |
-| ---- | -------- | ----- | -------- | --------------- | -------------- | ----------- |
-| x | float | | Exact | Meters | x | AWS: Agent's x-coordinate in meters|
-| y | float | | Exact | Meters | y | AWS: Agent's y-coordinate in meters |
-| all_wheels_on_track | bool | Exact | | all_wheels_on_track | AWS: Flag to indicate if the agent is on the track
-DRF: Some comments to be finished |
+| Name | Datatype | Range | Accuracy | Units | AWS Param |
+| ---- | -------- | ----- | -------- | ----- | --------- |
+| x | float | | Exact | Meters | x |
+| y | float | | Exact | Meters | y |
+| all_wheels_on_track | bool | | Exact | | all_wheels_on_track |
 | previous_waypoint_id | int | \>=0 |
 | previous_waypoint_x | float       |
 | previous_waypoint_y | float       |
