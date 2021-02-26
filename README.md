@@ -8,16 +8,16 @@
 | previous_waypoint_id | int | \>=0 | Exact | | closest_waypoints[0] |
 | previous_waypoint_x | float | Any | Exact | Meters | |
 | previous_waypoint_y | float | Any | Exact | Meters | |
-| next_waypoint_id | int | \>=0 | Exact | | closest_waypoints[1] |
+| next_waypoint_id | int | \>= 0 | Exact | | closest_waypoints[1] |
 | next_waypoint_x | float | Any | Exact | Meters | |
 | next_waypoint_y | float | Any | Exact | Meters | |
-| closest_waypoint_id | int | \>=0 | Exact | |
+| closest_waypoint_id | int | \>= 0 | Exact | |
 | closest_waypoint_x | float |  Any | Exact | Meters | |
 | closest_waypoint_y | float |  Any | Exact | Meters | |
 | distance_from_closest_waypoint | float | \>=0 | Exact | Meters |
-| distance_from_center | float | \>=0 | Exact | Meters |
-| distance_from_edge | float | \>=0 | Exact | Meters |
-| distance_from_extreme_edge | float | \>=0 | Approximate | Meters |
+| distance_from_center | float | \>= 0.0 | Exact | Meters |
+| distance_from_edge | float | \>= 0.0 | Exact | Meters |
+| distance_from_extreme_edge | float | \>= 0.0 | Approximate | Meters |
 | is_left_of_center | bool |  True or False | Exact |
 | is_right_of_center | bool |  True or False | Exact |
 | is_crashed | bool |  True or False | Exact |
@@ -29,11 +29,11 @@
 | progress | float | 0.0 to 100.0 | Exact | Percent |
 | predicted_lap_time | float | \>= 0.0 | Approximate | Seconds |
 | waypoints | ??LIST?? |
-| track_length | float | \>=0 | Exact | Meters |
-| track_width | float | \>=0 | Exact | Meters |
-| track_speed | float | \>=0 | Approximate | Meters per Second |
-| progress_speed | float | \>=0 | Approximate | Meters per Second |
-| action_speed | float | \>0 | Exact | Meters per Second |
+| track_length | float | \>= 0.0 | Exact | Meters |
+| track_width | float | \>= 0.0 | Exact | Meters |
+| track_speed | float | \>= 0.0 | Approximate | Meters per Second |
+| progress_speed | float | \>= 0.0 | Approximate | Meters per Second |
+| action_speed | float | \> 0.0 | Exact | Meters per Second |
 | action_steering_angle | float | -30.0 to 30.0 | Exact | Degrees |
 | action_sequence_length | int | \>= 1 | Exact | Steps |
 | is_steering_left | bool | True or False | Exact |
@@ -46,5 +46,5 @@
 | skew | float | -180.0 to 180.0 | Approximate | Degrees |
 | max_slide | float | -180.0 to 180.0 | Approximate | Degrees |
 | max_skew | float | -180.0 to 180.0 | Approximate | Degrees |
-| total_distance | float | \>=0.0 | Approximate | Meters |
+| total_distance | float | \>= 0.0 | Approximate | Meters |
 
