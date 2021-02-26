@@ -1,15 +1,9 @@
 #
 # DeepRacer Framework
 #
-# Version 1.0
+# Version 1.0 beta
 #
 # Copyright (c) 2021 dmh23
-#
-
-#
-# ISSUES - Initial track speed is artificially high
-#          Progress speed is still not matching well with DRG
-#          Handle repeated location - bearing of 0 messes up skew and slide
 #
 
 
