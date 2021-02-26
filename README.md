@@ -28,7 +28,7 @@
 | is_final_step | bool | True or False | Exact |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
 | predicted_lap_time | float | \>= 0.0 | Approximate | Seconds |
-| waypoints | ??LIST?? | | Exact | | waypoints |
+| waypoints | List | | Exact | | waypoints |
 | track_length | float | \>= 0.0 | Exact | Meters | track_length |
 | track_width | float | \>= 0.0 | Exact | Meters | track_width |
 | track_speed | float | \>= 0.0 | Approximate | Meters per Second |
@@ -49,15 +49,15 @@
 | total_distance | float | \>= 0.0 | Approximate | Meters |
 
 AWS Parameters not supported yet:  
-projection_distance  
-closest_objects  
-objects_distance  
-objects_distance_from_center  
-objects_heading  
-objects_left_of_center  
-objects_location  
-objects_speed  
-object_in_camera  
+- projection_distance  
+- closest_objects  
+- objects_distance  
+- objects_distance_from_center  
+- objects_heading  
+- objects_left_of_center  
+- objects_location  
+- objects_speed  
+- object_in_camera  
 
 
 
