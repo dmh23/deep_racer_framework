@@ -1,4 +1,17 @@
-# deep_racer_framework
+# deep_racer_framework v1.0
+
+### Introduction
+
+To use this framework, simply:
+- Copy the **entire file** src/deep_racer_framework.py
+- Scroll down to the end and write your own version of the get_reward() function
+- Use one or more of the attributes from the "framework" input parameter to calculate a reward greater than zero
+
+Notice how most IDEs, and even the editor provided in the AWS DeepRacer console itself, suggest names as you start to type attributes. This helps you write your reward function quickly and accurately.
+
+For a few simple ideas of what's possible in a reward function, see the "src/examples" directory.
+
+### Parameters
 
 | Name | Datatype | Range | Accuracy | Units | AWS Param |
 | :---- | :-------- | :----- | :-------- | :----- | :--------- |
@@ -48,7 +61,9 @@
 | max_skew | float | -180.0 to 180.0 | Approximate | Degrees |
 | total_distance | float | \>= 0.0 | Approximate | Meters |
 
-AWS Parameters not supported yet:  
+## Coming Soon
+
+Support for the remaining AWS DeepRacer native parameters and associated concepts:
 - projection_distance  
 - closest_objects  
 - objects_distance  
@@ -59,5 +74,10 @@ AWS Parameters not supported yet:
 - objects_speed  
 - object_in_camera  
 
-
+Plus, hopefully:
+- track shape analysis
+- predicted path analysis
+- camera visibility analysis
+- section speed calculations
+- *... and hopefully lots more ideas ...*
 
