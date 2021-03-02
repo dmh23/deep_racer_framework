@@ -11,7 +11,7 @@ Notice how most IDEs, and even the editor provided in the AWS DeepRacer console 
 
 For a few simple ideas of what's possible in a reward function, see the "src/examples" directory.
 
-### Parameters
+### Parameters - Summary
 
 | Name | Datatype | Range | Accuracy | Units | AWS Param |
 | :---- | :-------- | :----- | :-------- | :----- | :--------- |
@@ -61,7 +61,12 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | max_skew | float | -180.0 to 180.0 | Approximate | Degrees |
 | total_distance | float | \>= 0.0 | Approximate | Meters |
 
-## Coming Soon
+
+### Parameters - Explained
+
+*Coming soon ...*
+
+### Planned New Features for V2.0
 
 Support for the remaining AWS DeepRacer native parameters and associated concepts:
 - projection_distance  
