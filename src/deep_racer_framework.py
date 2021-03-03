@@ -275,12 +275,9 @@ class Framework:
         # Calculations that use the history
         #
         if previous_step:
-            if previous_step.x == self.x and previous_step.y == self.y:
-                previous_different_step = self._history[-3]
-                self.true_bearing = get_bearing_between_points(
-                    (previous_different_step.x, previous_different_step.y), (self.x, self.y))
-            else:
-                self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
+            if previous_step.x != self.x or previous_step.y != self.y:   # Otherwise keep existing true_bearing
+                if self.progress - previous_step.progress >= 0.05:
+                    self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
             if (previous_step.action_speed == self.action_speed and
                     previous_step.action_steering_angle == self.action_steering_angle):
                 self.action_sequence_length += 1
@@ -294,7 +291,7 @@ class Framework:
 
             progress_speed_distance = (self.progress - speed_calculate_steps[0].progress) / 100 * self.track_length
             progress_speed_calculate_time = (len(speed_calculate_steps) - 1) / RealWorld.STEPS_PER_SECOND
-            self.progress_speed = progress_speed_distance / progress_speed_calculate_time
+            self.progress_speed = max(0.0, progress_speed_distance / progress_speed_calculate_time)
         else:
             self.action_sequence_length = 1
             self.true_bearing = self.heading
@@ -314,33 +311,32 @@ class Framework:
             self.max_skew = self.skew
 
     def print_debug(self):
-        #print("x, y                    ", round(self.x, 3), round(self.y, 3))
-        #print("all_wheels_on_track     ", self.all_wheels_on_track)
-        #print("previous_waypoint_id    ", self.previous_waypoint_id)
-        #print("previous_waypoint_x, y  ", round(self.previous_waypoint_x, 3), round(self.previous_waypoint_y, 3))
-        #print("next_waypoint_id        ", self.next_waypoint_id)
-        #print("next_waypoint_x, y      ", round(self.next_waypoint_x, 3), round(self.next_waypoint_y, 3))
-        #print("closest_waypoint_id     ", self.closest_waypoint_id)
-        #print("closest_waypoint_x, y   ", round(self.closest_waypoint_x, 3), round(self.closest_waypoint_y, 3))
-        #print("distance_from_closest_waypoint ", round(self.distance_from_closest_waypoint, 2))
-        #print("distance_from_center    ", round(self.distance_from_center, 2))
-        #print("distance_from_edge      ", round(self.distance_from_edge, 2))
-        #print("distance_from_extreme_edge     ", round(self.distance_from_extreme_edge, 2))
-        #print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
-        #print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
-        #print("is_off_track            ", self.is_off_track)
+        print("x, y                    ", round(self.x, 3), round(self.y, 3))
+        print("all_wheels_on_track     ", self.all_wheels_on_track)
+        print("previous_waypoint_id    ", self.previous_waypoint_id)
+        print("previous_waypoint_x, y  ", round(self.previous_waypoint_x, 3), round(self.previous_waypoint_y, 3))
+        print("next_waypoint_id        ", self.next_waypoint_id)
+        print("next_waypoint_x, y      ", round(self.next_waypoint_x, 3), round(self.next_waypoint_y, 3))
+        print("closest_waypoint_id     ", self.closest_waypoint_id)
+        print("closest_waypoint_x, y   ", round(self.closest_waypoint_x, 3), round(self.closest_waypoint_y, 3))
+        print("distance_from_closest_waypoint ", round(self.distance_from_closest_waypoint, 2))
+        print("distance_from_center    ", round(self.distance_from_center, 2))
+        print("distance_from_edge      ", round(self.distance_from_edge, 2))
+        print("distance_from_extreme_edge     ", round(self.distance_from_extreme_edge, 2))
+        print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
+        print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
+        print("is_off_track            ", self.is_off_track)
         print("steps, is_final_step    ", self.steps, self.is_final_step)
         print("time                    ", round(self.time, 2))
         print("predicted_lap_time      ", round(self.predicted_lap_time, 2))
         print("progress                ", round(self.progress, 2))
-        #print("waypoints  (SIZE)       ", len(self.waypoints))
-        #print("track_length, width     ", round(self.track_length, 2), round(self.track_width, 2))
+        print("waypoints  (SIZE)       ", len(self.waypoints))
+        print("track_length, width     ", round(self.track_length, 2), round(self.track_width, 2))
         print("action_speed            ", round(self.action_speed, 2))
         print("action_steering_angle   ", round(self.action_steering_angle, 1))
         print("action_sequence_length  ", self.action_sequence_length)
-        #print("is_steering_left/right  ", self.is_steering_left, self.is_steering_right)
-        #print("is_steering_straight    ", self.is_steering_straight)
-
+        print("is_steering_left/right  ", self.is_steering_left, self.is_steering_right)
+        print("is_steering_straight    ", self.is_steering_straight)
         print("heading                 ", round(self.heading, 2))
         print("track_bearing           ", round(self.track_bearing, 2))
         print("true_bearing            ", round(self.true_bearing, 2))
@@ -381,5 +377,4 @@ framework_global = None
 # -------------------------------------------------------------------------------
 
 def get_reward(framework: Framework):
-    framework.print_debug()
-    return framework.steps * 2
+    return pow(10, framework.track_speed) + framework.progress
