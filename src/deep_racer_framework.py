@@ -1,7 +1,7 @@
 #
 # DeepRacer Framework
 #
-# Version 1.0 beta
+# Version 1.0
 #
 # Copyright (c) 2021 dmh23
 #
@@ -123,7 +123,7 @@ class HistoricStep:
         if previous_step:
             self.distance = get_distance_between_points((previous_step.x, previous_step.y), (self.x, self.y))
         else:
-            self.distance = 0.0     # Causes issues if we use: framework.progress / 100 * framework.track_length
+            self.distance = 0.0  # Causes issues if we use: framework.progress / 100 * framework.track_length
 
 
 # -------------------------------------------------------------------------------
@@ -185,16 +185,6 @@ class Framework:
         self.max_skew = 0.0
         self.total_distance = 0.0
 
-
-
-        # Derived ideas :
-        #
-        #                    / is_spinning
-        #                 has_skidded  / has_spun   (has is_skidding or is_spinning been True any time this episode?)
-        #
-        # projection_distance - WHAT'S THIS????
-        #
-
     def process_params(self, params):
         self.x = float(params[ParamNames.X])
         self.y = float(params[ParamNames.Y])
@@ -206,8 +196,10 @@ class Framework:
         self.next_waypoint_id = int(params[ParamNames.CLOSEST_WAYPOINTS][1])
         self.next_waypoint_x, self.next_waypoint_y = params[ParamNames.WAYPOINTS][self.next_waypoint_id]
 
-        distance_to_previous_waypoint = get_distance_between_points((self.x, self.y), params[ParamNames.WAYPOINTS][self.previous_waypoint_id])
-        distance_to_next_waypoint = get_distance_between_points((self.x, self.y), params[ParamNames.WAYPOINTS][self.next_waypoint_id])
+        distance_to_previous_waypoint = get_distance_between_points((self.x, self.y), params[ParamNames.WAYPOINTS][
+            self.previous_waypoint_id])
+        distance_to_next_waypoint = get_distance_between_points(
+            (self.x, self.y), params[ParamNames.WAYPOINTS][self.next_waypoint_id])
         if distance_to_previous_waypoint < distance_to_next_waypoint:
             self.closest_waypoint_id = self.previous_waypoint_id
             self.closest_waypoint_x = self.previous_waypoint_x
@@ -221,7 +213,7 @@ class Framework:
 
         self.distance_from_center = float(params[ParamNames.DISTANCE_FROM_CENTER])
         self.distance_from_edge = float(max(0.0, params[ParamNames.TRACK_WIDTH] / 2 - self.distance_from_center))
-        self.distance_from_extreme_edge =\
+        self.distance_from_extreme_edge = \
             float(max(0.0, (params[ParamNames.TRACK_WIDTH] + RealWorld.CAR_WIDTH) / 2 - self.distance_from_center))
 
         self.is_left_of_center = bool(params[ParamNames.IS_LEFT_OF_CENTER])
@@ -275,7 +267,7 @@ class Framework:
         # Calculations that use the history
         #
         if previous_step:
-            if previous_step.x != self.x or previous_step.y != self.y:   # Otherwise keep existing true_bearing
+            if previous_step.x != self.x or previous_step.y != self.y:  # Otherwise keep existing true_bearing
                 if self.progress - previous_step.progress >= 0.05:
                     self.true_bearing = get_bearing_between_points((previous_step.x, previous_step.y), (self.x, self.y))
             if (previous_step.action_speed == self.action_speed and
