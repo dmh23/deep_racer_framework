@@ -107,7 +107,7 @@ Note: All values of these are _false_ until the very last step, when these are s
 - **track_speed** - The speed the car is currently actually travelling at
 - **progress_speed** - The speed of the car relative to the center line; if the car is travelling along the centre line, then it will be the same as the **track_speed**; if it is cutting a corner, the **progress_speed** will be higher; or if it is going sideways or taking the outside of a corner, then the **progress_speed** will be lower
 
-Note: These are real measures of the car's speed, unlike the **action_speed**, see below
+Note: These are real measures of the car's speed, unlike the **action_speed**, see below  
 Note: More precisely, the **progress_speed** is the speed the car is effectively completing the track as measured along the waypoints / center line (it is called "progress" speed since this is the method for measuring **progress**, see above)
 
 #### Action Chosen
@@ -129,7 +129,7 @@ Note: A sequence length of 1 means the chosen action is different from the last 
 - **slide** - The difference in degrees between **heading** and **true_bearing**, you decide what is reasonable but typically somewhere between 10 and 20 degrees difference marks the change from controlled behaviour to sliding/skidding/spinning (i.e. uncontrolled, unless you want to encourage rally turns round a tight corner!)
 - **skew** - The difference in degrees between **track_bearing** and **true_bearing**, so a value close to zero indicates the car is following the track center line (which might be good for straight sections), whereas higher values indicate driving across the track (which might be good for cutting corners)
 - **max_slide** - The greatest value of **slide** during this episode, provided so you can reward or penalise behaviour such as skidding for the remainder of the episode (e.g. you might reward the car for recovering and continuing, or you might continue to penalise the rest of the episode to prevent loss of control in future)
-- **max_skew** - Similar, the greatest value of **skew** during this episode
+- **max_skew** - Similarly, the greatest value of **skew** during this episode (probably less useful than **max_slide**?!)
 
 #### Track Characteristics
 - **track_length** - Total length of the track (measured along the waypoints / center line)
