@@ -223,11 +223,11 @@ class Framework:
         self.is_crashed = bool(params[ParamNames.IS_CRASHED])
         self.is_off_track = bool(params[ParamNames.IS_OFFTRACK])
         self.is_reversed = bool(params[ParamNames.IS_REVERSED])
-        self.is_complete_lap = self.progress == 100.0
 
         self.steps = int(round(params[ParamNames.STEPS]))
         self.time = self.steps / RealWorld.STEPS_PER_SECOND
         self.progress = float(params[ParamNames.PROGRESS])
+        self.is_complete_lap = self.progress == 100.0
         self.is_final_step = self.is_complete_lap or self.is_crashed or self.is_off_track or self.is_reversed
         if self.progress > 0:
             self.predicted_lap_time = round(100 / self.progress * self.steps / RealWorld.STEPS_PER_SECOND, 2)
