@@ -91,8 +91,8 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **time** - xxx
 - **predicted_lap_time** - xxx
 - **total_distance** - xxx
-- **is_final_step** - xxx (the episode ends at this step, so this is the final chance to give / not give an appropriate reward for the final state) - see next section for status indications
-- 
+- **is_final_step** - xxx (the episode ends at this step, so this is the final chance to give / not give an appropriate reward for the final state) ... see next section for status indications
+
 #### Episode Final Status
 - **is_crashed** - Value of _true_ means the car has crashed into an object
 - **is_off_track** - Value of _true_ means the car has gone off track, i.e. none of its wheels are on the track
