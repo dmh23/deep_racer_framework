@@ -24,15 +24,15 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | distance_from_edge | float | \>= 0.0 | Exact | Meters |
 | distance_from_extreme_edge | float | \>= 0.0 | Approximate | Meters |
 | waypoints | List | | Exact | | waypoints |
+| closest_waypoint_id | int | \>= 0 | Exact | List index |
+| closest_waypoint_x | float |  Any | Exact | Meters | |
+| closest_waypoint_y | float |  Any | Exact | Meters | |
 | previous_waypoint_id | int | \>=0 | Exact | List index | closest_waypoints[0] |
 | previous_waypoint_x | float | Any | Exact | Meters | |
 | previous_waypoint_y | float | Any | Exact | Meters | |
 | next_waypoint_id | int | \>= 0 | Exact | List index | closest_waypoints[1] |
 | next_waypoint_x | float | Any | Exact | Meters | |
 | next_waypoint_y | float | Any | Exact | Meters | |
-| closest_waypoint_id | int | \>= 0 | Exact | List index |
-| closest_waypoint_x | float |  Any | Exact | Meters | |
-| closest_waypoint_y | float |  Any | Exact | Meters | |
 | distance_from_closest_waypoint | float | \>= 0.0 | Exact | Meters |
 | steps | int | \>= 1 | Exact | Steps | steps |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
@@ -48,10 +48,10 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | progress_speed | float | \>= 0.0 | Approximate | Meters per Second |
 | action_speed | float | \> 0.0 | Exact | Meters per Second | speed |
 | action_steering_angle | float | -30.0 to 30.0 | Exact | Degrees | steering_angle |
-| action_sequence_length | int | \>= 1 | Exact | Steps |
 | is_steering_left | bool | True or False | Exact |
 | is_steering_right | bool | True or False | Exact |
 | is_steering_straight | bool | True or False | Exact |
+| action_sequence_length | int | \>= 1 | Exact | Steps |
 | heading | float | -180.0 to 180.0 | Exact | Degrees | heading |
 | track_bearing | float | -180.0 to 180.0 | Exact | Degrees |
 | true_bearing | float | -180.0 to 180.0 | Approximate | Degrees |
@@ -82,7 +82,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **closest_waypoint_y** - The y co-ordinate of the closest waypoint to the car
 - **closest_waypoint_id** - The index number of the closest waypoint to the car (index indicates position in the **waypoints** list)
 - **previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately behind the car
-- **previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
+- **next_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
 - **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
 
 #### Progress Indications
