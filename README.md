@@ -18,6 +18,11 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | x | float | Any | Exact | Meters | x |
 | y | float | Any | Exact | Meters | y |
 | all_wheels_on_track | bool | True or False | Exact | | all_wheels_on_track |
+| is_left_of_center | bool |  True or False | Exact | | is_left_of_center |
+| is_right_of_center | bool |  True or False | Exact |
+| distance_from_center | float | \>= 0.0 | Exact | Meters | distance_from_center |
+| distance_from_edge | float | \>= 0.0 | Exact | Meters |
+| distance_from_extreme_edge | float | \>= 0.0 | Approximate | Meters |
 | waypoints | List | | Exact | | waypoints |
 | previous_waypoint_id | int | \>=0 | Exact | List index | closest_waypoints[0] |
 | previous_waypoint_x | float | Any | Exact | Meters | |
@@ -29,18 +34,13 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | closest_waypoint_x | float |  Any | Exact | Meters | |
 | closest_waypoint_y | float |  Any | Exact | Meters | |
 | distance_from_closest_waypoint | float | \>= 0.0 | Exact | Meters |
-| distance_from_center | float | \>= 0.0 | Exact | Meters | distance_from_center |
-| distance_from_edge | float | \>= 0.0 | Exact | Meters |
-| distance_from_extreme_edge | float | \>= 0.0 | Approximate | Meters |
-| is_left_of_center | bool |  True or False | Exact | | is_left_of_center |
-| is_right_of_center | bool |  True or False | Exact |
 | is_crashed | bool |  True or False | Exact | | is_crashed |
 | is_off_track | bool | True or False | Exact | | is_offtrack |
 | is_reversed | bool |  True or False | Exact | | is_reversed |
-| steps | int | \>= 1 | Exact | Steps | steps |
-| time | float | \>= 0.0 | Approximate | Seconds |
 | is_final_step | bool | True or False | Exact |
+| steps | int | \>= 1 | Exact | Steps | steps |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
+| time | float | \>= 0.0 | Approximate | Seconds |
 | predicted_lap_time | float | \>= 0.0 | Approximate | Seconds |
 | track_length | float | \>= 0.0 | Exact | Meters | track_length |
 | track_width | float | \>= 0.0 | Exact | Meters | track_width |
@@ -65,20 +65,32 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 ### Parameters - Explained
 
 #### Car Location
-**x** - The x co-ordinate of the car's location
-**y** - The y co-ordinate of the car's location
-**all_wheels_on_track** - Value of True means all four wheels are on the track
+- **x** - The x co-ordinate of the car's location
+- **y** - The y co-ordinate of the car's location
+- **all_wheels_on_track** - Value of _True_ means all four wheels are on the track
+- **is_left_of_center** - Value of _True_ means the centre of the car is left of the center line
+- **is_right_of_center** - Value of _True_ means the centre of the car is right of the center line
+- **distance_from_center** - xxx
+- **distance_from_edge** - xxx
+- **distance_from_extreme_edge** - xxx
+
 
 #### Waypoints
-**waypoints** - List of all track waypoints, same as AWS DeepRacer parameter
+- **waypoints** - List of all track waypoints, same as AWS DeepRacer parameter
+- **closest_waypoint_x** - The x co-ordinate of the closest waypoint to the car
+- **closest_waypoint_y** - The y co-ordinate of the closest waypoint to the car
+- **closest_waypoint_id** - The index number of the closest waypoint to the car (index indicates position in the **waypoints** list)
+- **previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately behind the car
+- **previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
+- **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
 
-**closest_waypoint_x** - The x co-ordinate of the closest waypoint to the car
-**closest_waypoint_y** - The y co-ordinate of the closest waypoint to the car
-**closest_waypoint_id** - The index number of the closest waypoint to the car (index indicates position in the **waypoints** list)
+#### Episode End Status
+- **is_crashed** - Value of _true_ means the car has crashed into an object
+- **is_off_track** - Value of _true_ means the car has gone off track, i.e. none of its wheels are on the track
+- **is_reversed** - Value of _true_ means the car is going the wrong way round the track i.e. it probably spun and ended up pointing the wrong way!
+- **is_complete_lap** - Value of _true_ means the car has finished a lap
 
-**previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately behind the car
-**previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
-
+(the episode ends at this step, so this is the final chance to give / not give an appropriate reward for the final state)
 
 
 ### Planned New Features for V2.0
