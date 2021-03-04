@@ -18,6 +18,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | x | float | Any | Exact | Meters | x |
 | y | float | Any | Exact | Meters | y |
 | all_wheels_on_track | bool | True or False | Exact | | all_wheels_on_track |
+| waypoints | List | | Exact | | waypoints |
 | previous_waypoint_id | int | \>=0 | Exact | List index | closest_waypoints[0] |
 | previous_waypoint_x | float | Any | Exact | Meters | |
 | previous_waypoint_y | float | Any | Exact | Meters | |
@@ -41,7 +42,6 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | is_final_step | bool | True or False | Exact |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
 | predicted_lap_time | float | \>= 0.0 | Approximate | Seconds |
-| waypoints | List | | Exact | | waypoints |
 | track_length | float | \>= 0.0 | Exact | Meters | track_length |
 | track_width | float | \>= 0.0 | Exact | Meters | track_width |
 | track_speed | float | \>= 0.0 | Approximate | Meters per Second |
@@ -64,7 +64,22 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 
 ### Parameters - Explained
 
-*Coming soon ...*
+#### Car Location
+**x** - The x co-ordinate of the car's location
+**y** - The y co-ordinate of the car's location
+**all_wheels_on_track** - Value of True means all four wheels are on the track
+
+#### Waypoints
+**waypoints** - List of all track waypoints, same as AWS DeepRacer parameter
+
+**closest_waypoint_x** - The x co-ordinate of the closest waypoint to the car
+**closest_waypoint_y** - The y co-ordinate of the closest waypoint to the car
+**closest_waypoint_id** - The index number of the closest waypoint to the car (index indicates position in the **waypoints** list)
+
+**previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately behind the car
+**previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
+
+
 
 ### Planned New Features for V2.0
 
