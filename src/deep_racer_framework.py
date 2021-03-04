@@ -160,6 +160,7 @@ class Framework:
         self.is_crashed = False
         self.is_off_track = False
         self.is_reversed = False
+        self.is_complete_lap = False
         self.steps = 0
         self.time = 0.0
         self.is_final_step = False
@@ -222,11 +223,12 @@ class Framework:
         self.is_crashed = bool(params[ParamNames.IS_CRASHED])
         self.is_off_track = bool(params[ParamNames.IS_OFFTRACK])
         self.is_reversed = bool(params[ParamNames.IS_REVERSED])
+        self.is_complete_lap = self.progress == 100.0
 
         self.steps = int(round(params[ParamNames.STEPS]))
         self.time = self.steps / RealWorld.STEPS_PER_SECOND
         self.progress = float(params[ParamNames.PROGRESS])
-        self.is_final_step = self.progress == 100.0 or self.is_crashed or self.is_off_track or self.is_reversed
+        self.is_final_step = self.is_complete_lap or self.is_crashed or self.is_off_track or self.is_reversed
         if self.progress > 0:
             self.predicted_lap_time = round(100 / self.progress * self.steps / RealWorld.STEPS_PER_SECOND, 2)
         else:
@@ -318,6 +320,7 @@ class Framework:
         print("is_left/right_of_center ", self.is_left_of_center, self.is_right_of_center)
         print("is_crashed / reversed   ", self.is_crashed, self.is_reversed)
         print("is_off_track            ", self.is_off_track)
+        print("is_complete_lap         ", self.is_complete_lap)
         print("steps, is_final_step    ", self.steps, self.is_final_step)
         print("time                    ", round(self.time, 2))
         print("predicted_lap_time      ", round(self.predicted_lap_time, 2))
