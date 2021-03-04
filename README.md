@@ -71,9 +71,11 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **all_wheels_on_track** - Value of _True_ means all four wheels are on the track
 - **is_left_of_center** - Value of _True_ means the centre of the car is left of the center line
 - **is_right_of_center** - Value of _True_ means the centre of the car is right of the center line
-- **distance_from_center** - xxx
-- **distance_from_edge** - xxx
-- **distance_from_extreme_edge** - xxx
+- **distance_from_center** - The distance of the center of the car from the center line of the track
+- **distance_from_edge** - The distance of the center of the car from the edge of the track (zero means the center of the car is on or beyond the edge)
+- **distance_from_extreme_edge** - The _approximate_ distance of the car from actually going off track (zero means the car is either off track, or dangerously close)
+
+(regarding the edge of the track, remember that the car is still on the track so long as at least one wheel is on the track, and furthermore the car itself is quite wide relative to the track ... so when **distance_from_edge** is zero, in reality the car is still fairly safely on the track ... this is why **distance_from_extreme_edge** is also provided as a better estimate of how far the car is really away from being judged off track)
 
 
 #### Waypoints
@@ -86,9 +88,9 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
 
 #### Progress Indications
-- **steps** - xxx
-- **progress** - xxx
-- **time** - xxx
+- **steps** - Number of steps completed so far, including this one
+- **progress** - Progress towards a complete lap as a percentage in the range 0 to 100
+- **time** - The _approximate_ number of seconds ....... xxxxxxxxxxx
 - **predicted_lap_time** - xxx
 - **total_distance** - xxx
 - **is_final_step** - xxx (the episode ends at this step, so this is the final chance to give / not give an appropriate reward for the final state) ... see next section for status indications
