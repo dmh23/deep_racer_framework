@@ -75,7 +75,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **distance_from_edge** - The distance of the center of the car from the edge of the track (zero means the center of the car is on or beyond the edge)
 - **distance_from_extreme_edge** - The _approximate_ distance of the car from actually going off track (zero means the car is either off track, or dangerously close)
 
-(regarding the edge of the track, remember that the car is still on the track so long as at least one wheel is on the track, and furthermore the car itself is quite wide relative to the track ... so when **distance_from_edge** is zero, in reality the car is still fairly safely on the track ... this is why **distance_from_extreme_edge** is also provided as a better estimate of how far the car is really away from being judged off track)
+Note: Regarding the edge of the track, remember that the car is still on the track so long as at least one wheel is on the track, and furthermore the car itself is quite wide relative to the track ... so when **distance_from_edge** is zero, in reality the car is still fairly safely on the track ... this is why **distance_from_extreme_edge** is also provided as a better estimate of how far the car really is from being judged off track.
 
 
 #### Waypoints
@@ -88,12 +88,12 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
 
 #### Progress Indications
-- **steps** - Number of steps completed so far, including this one
+- **steps** - Number of steps completed so far in this episode, including this step (so it's basically the step number)
 - **progress** - Progress towards a complete lap as a percentage in the range 0 to 100
-- **time** - The _approximate_ number of seconds ....... xxxxxxxxxxx
-- **predicted_lap_time** - xxx
-- **total_distance** - xxx
-- **is_final_step** - xxx (the episode ends at this step, so this is the final chance to give / not give an appropriate reward for the final state) ... see next section for status indications
+- **time** - The _approximate_ number of seconds that the car has taken so far
+- **predicted_lap_time** - Estimate for complete lap time based on progress so far (e.g. if car has covered half the track in 6 secs, then the predicted lap time is 12 seconds, and so on)
+- **total_distance** - Total distance travelled so far in this episode
+- **is_final_step** - Value of _true_ means the car has ended this episode, this is the last call to the reward function, so this is your chance to give a special reward for a fast lap, or to penalise not finishing successfully (see next section, "Episode Final Status", to discover why the episode is ending, good or bad!)
 
 #### Episode Final Status
 - **is_crashed** - Value of _true_ means the car has crashed into an object
@@ -101,11 +101,14 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **is_reversed** - Value of _true_ means the car is going the wrong way round the track i.e. it probably spun and ended up pointing the wrong way!
 - **is_complete_lap** - Value of _true_ means the car has finished a lap
 
+Note: All values of these are _false_ until the very last step, when these are set to indicate the reason for reaching the end of the episode
+
 #### Actual Speed
 - **track_speed** - The speed the car is currently actually travelling at
-- **progress_speed** - xxx
+- **progress_speed** - The speed of the car relative to the center line; if the car is travelling along the centre line, then it will be the same as the **track_speed**; if it is cutting a corner, the **progress_speed** will be higher; or if it is going sideways or taking the outside of a corner, then the **progress_speed** will be lower
 
-(note - these are real measures of the car's speed, unlike the action_speed, see below)
+Note: These are real measures of the car's speed, unlike the **action_speed**, see below  
+Note: More precisely, the **progress_speed** is the speed the car is effectively completing the track as measured along the waypoints / center line (it is called "progress" speed since this is the method for measuring **progress**, see above)
 
 #### Action Chosen
 - **action_speed** - The speed of the action chosen from the action space
@@ -115,22 +118,22 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 - **is_steering_straight** - Value of _true_ means the chosen action is steering straight ahead
 - **action_sequence_length** - Counts number of consecutive times the same action has been chosen, including this step (hence always >= 1)
 
-(note - a sequence length of 1 means the chosen action is different from the last step; a value >= 2 indicates the same action has been chosen again)
+Note: A sequence length of 1 means the chosen action is different from the last step; a value >= 2 indicates the same action has been chosen again
 
 #### Direction of Travel etc.
-- **heading** - xxx
-- **track_bearing** - xxx
-- **true_bearing** - xxx
+- **heading** - The heading of the car in degrees, which means this is where the car is "pointing" (also think of this as being the direction the camera is "looking")
+- **track_bearing** - The bearing of the track in degrees, based on the waypoints / center line
+- **true_bearing** - The actual bearing the car is travelling along, which might differ from the **heading** especially on bends, or if the car is out of control (spinning etc.)
 
 ####  Indications of Sliding/Skidding etc.
-- **slide** - xxx
-- **skew** - xxx
-- **max_slide** - xxx
-- **max_skew** - xxx
+- **slide** - The difference in degrees between **heading** and **true_bearing**, you decide what is reasonable but typically somewhere between 10 and 20 degrees difference marks the change from controlled behaviour to sliding/skidding/spinning (i.e. uncontrolled, unless you want to encourage rally turns round a tight corner!)
+- **skew** - The difference in degrees between **track_bearing** and **true_bearing**, so a value close to zero indicates the car is following the track center line (which might be good for straight sections), whereas higher values indicate driving across the track (which might be good for cutting corners)
+- **max_slide** - The greatest value of **slide** during this episode, provided so you can reward or penalise behaviour such as skidding for the remainder of the episode (e.g. you might reward the car for recovering and continuing, or you might continue to penalise the rest of the episode to prevent loss of control in future)
+- **max_skew** - Similarly, the greatest value of **skew** during this episode (probably less useful than **max_slide**?!)
 
 #### Track Characteristics
-- **track_length** - xxx
-- **track_width** - xxx
+- **track_length** - Total length of the track (measured along the waypoints / center line)
+- **track_width** - Width of the track
 
 
 ## Planned New Features for V2.0
