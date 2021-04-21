@@ -1,7 +1,7 @@
 #
 # DeepRacer Framework
 #
-# Version 1.0
+# Version 1.0.1
 #
 # Copyright (c) 2021 dmh23
 #
@@ -185,6 +185,7 @@ class Framework:
         self.max_slide = 0.0
         self.max_skew = 0.0
         self.total_distance = 0.0
+        self.objects_location = []
 
     def process_params(self, params):
         self.x = float(params[ParamNames.X])
@@ -249,6 +250,16 @@ class Framework:
         self.track_bearing = get_bearing_between_points(
             (self.previous_waypoint_x, self.previous_waypoint_y),
             (self.next_waypoint_x, self.next_waypoint_y))
+
+        self.objects_location = params[ParamNames.OBJECTS_LOCATION]
+
+        #
+        # Print object info for use by DRG
+        #
+
+        # Not step 1 because there's still a bug (?!) that means the reward function is not called until step 2!!!
+        if self.steps == 2:
+            print("DRG-OBJECTS:", self.objects_location)
 
         #
         # Record history
