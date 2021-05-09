@@ -86,7 +86,7 @@ Note: Regarding the edge of the track, remember that the car is still on the tra
 - **previous_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately behind the car
 - **next_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
 - **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
-
+- **just_passed_waypoint_ids** - A list of waypoint index(es) just passed (each waypoint is only passed at most once per episode)
 #### Progress Indications
 - **steps** - Number of steps completed so far in this episode, including this step (so it's basically the step number)
 - **progress** - Progress towards a complete lap as a percentage in the range 0 to 100
