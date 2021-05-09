@@ -1,7 +1,7 @@
 #
 # DeepRacer Framework
 #
-# Version 1.0.1
+# Version 1.0.2
 #
 # Copyright (c) 2021 dmh23
 #
@@ -47,7 +47,7 @@ class ParamNames:
 
 class RealWorld:
     STEPS_PER_SECOND = 15
-    CAR_WIDTH = 0.21
+    CAR_WIDTH = 0.225
 
 
 # -------------------------------------------------------------------------------
@@ -120,6 +120,8 @@ class HistoricStep:
         self.action_speed = framework.action_speed
         self.action_steering_angle = framework.action_steering_angle
         self.closest_waypoint_id = framework.closest_waypoint_id
+        self.next_waypoint_id = framework.next_waypoint_id
+
         if previous_step:
             self.distance = get_distance_between_points((previous_step.x, previous_step.y), (self.x, self.y))
         else:
@@ -137,6 +139,7 @@ class Framework:
         # Real PRIVATE variables set here
         self._processed_waypoints = get_processed_waypoints(params[ParamNames.WAYPOINTS])
         self._history = []
+        self._waypoints_already_passed = []
 
         # Definitions only of variables to use in your reward method, real values are set during process_params()
         self.x = 0.0
@@ -186,6 +189,7 @@ class Framework:
         self.max_skew = 0.0
         self.total_distance = 0.0
         self.objects_location = []
+        self.just_passed_waypoint_ids = []
 
     def process_params(self, params):
         self.x = float(params[ParamNames.X])
@@ -258,15 +262,16 @@ class Framework:
         #
 
         # Not step 1 because there's still a bug (?!) that means the reward function is not called until step 2!!!
-        if self.steps == 2:
+        if self.steps == 2 and len(self.objects_location) > 0:
             print("DRG-OBJECTS:", self.objects_location)
 
         #
         # Record history
         #
 
-        if self.steps <= 2 and len(self._history) > 2:
+        if self.steps <= 2:
             self._history = []
+            self._waypoints_already_passed = [False] * len(self.waypoints)
 
         if self._history:
             previous_step = self._history[-1]
@@ -297,6 +302,9 @@ class Framework:
             progress_speed_distance = (self.progress - speed_calculate_steps[0].progress) / 100 * self.track_length
             progress_speed_calculate_time = (len(speed_calculate_steps) - 1) / RealWorld.STEPS_PER_SECOND
             self.progress_speed = max(0.0, progress_speed_distance / progress_speed_calculate_time)
+
+            self.just_passed_waypoint_ids = self._get_just_passed_waypoint_ids(
+                previous_step.next_waypoint_id, self.next_waypoint_id)
         else:
             self.action_sequence_length = 1
             self.true_bearing = self.heading
@@ -314,6 +322,27 @@ class Framework:
             self.max_slide = self.slide
         if abs(self.skew) > abs(self.max_skew):
             self.max_skew = self.skew
+
+    def _get_just_passed_waypoint_ids(self, previous_next_waypoint_id, current_next_waypoint_id):
+        if previous_next_waypoint_id == current_next_waypoint_id:
+            return []
+
+        difference = current_next_waypoint_id - previous_next_waypoint_id
+
+        if difference < -10 or 1 <= difference <= 10:
+            result = []
+            w = previous_next_waypoint_id
+            while w != current_next_waypoint_id:
+                if not self._waypoints_already_passed[w]:
+                    result.append(w)
+                    self._waypoints_already_passed[w] = True
+                w += 1
+                if w >= len(self.waypoints):
+                    w = 0
+
+            return result
+        else:
+            return []
 
     def print_debug(self):
         print("x, y                    ", round(self.x, 3), round(self.y, 3))
@@ -351,6 +380,7 @@ class Framework:
         print("total_distance          ", round(self.total_distance, 2))
         print("track_speed             ", round(self.track_speed, 2))
         print("progress_speed          ", round(self.progress_speed, 2))
+        print("just passed waypoint(s) ", self.just_passed_waypoint_ids)
 
 
 # -------------------------------------------------------------------------------
@@ -383,4 +413,7 @@ framework_global = None
 # -------------------------------------------------------------------------------
 
 def get_reward(framework: Framework):
-    return pow(10, framework.track_speed) + framework.progress
+    if len(framework.just_passed_waypoint_ids) >= 1:
+        return len(framework.just_passed_waypoint_ids) * 1000 + sum(framework.just_passed_waypoint_ids)
+    else:
+        return 0.01
