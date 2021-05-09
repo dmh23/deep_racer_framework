@@ -1,4 +1,4 @@
-# deep_racer_framework v1.0
+# deep_racer_framework v1.0.2
 
 ## Introduction
 
@@ -34,6 +34,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | next_waypoint_x | float | Any | Exact | Meters | |
 | next_waypoint_y | float | Any | Exact | Meters | |
 | distance_from_closest_waypoint | float | \>= 0.0 | Exact | Meters |
+|just_passed_waypoint_ids | List | | Exact | List index | |
 | steps | int | \>= 1 | Exact | Steps | steps |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
 | time | float | \>= 0.0 | Approximate | Seconds |
