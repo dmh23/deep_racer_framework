@@ -1,7 +1,7 @@
 #
 # DeepRacer Framework
 #
-# Version 1.0.2
+# Version 1.0.3
 #
 # Copyright (c) 2021 dmh23
 #
@@ -139,7 +139,6 @@ class Framework:
         # Real PRIVATE variables set here
         self._processed_waypoints = get_processed_waypoints(params[ParamNames.WAYPOINTS])
         self._history = []
-        self._waypoints_already_passed = []
 
         # Definitions only of variables to use in your reward method, real values are set during process_params()
         self.x = 0.0
@@ -190,6 +189,7 @@ class Framework:
         self.total_distance = 0.0
         self.objects_location = []
         self.just_passed_waypoint_ids = []
+        self.time_at_waypoint = []
 
     def process_params(self, params):
         self.x = float(params[ParamNames.X])
@@ -271,7 +271,7 @@ class Framework:
 
         if self.steps <= 2:
             self._history = []
-            self._waypoints_already_passed = [False] * len(self.waypoints)
+            self.time_at_waypoint = [None] * len(self.waypoints)
 
         if self._history:
             previous_step = self._history[-1]
@@ -333,9 +333,9 @@ class Framework:
             result = []
             w = previous_next_waypoint_id
             while w != current_next_waypoint_id:
-                if not self._waypoints_already_passed[w]:
+                if self.time_at_waypoint[w] is None:
                     result.append(w)
-                    self._waypoints_already_passed[w] = True
+                    self.time_at_waypoint[w] = self.time
                 w += 1
                 if w >= len(self.waypoints):
                     w = 0
