@@ -1,4 +1,4 @@
-# deep_racer_framework v1.0.2
+# deep_racer_framework v1.0.3
 
 ## Introduction
 
@@ -34,7 +34,8 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | next_waypoint_x | float | Any | Exact | Meters | |
 | next_waypoint_y | float | Any | Exact | Meters | |
 | distance_from_closest_waypoint | float | \>= 0.0 | Exact | Meters |
-|just_passed_waypoint_ids | List | | Exact | List index | |
+| just_passed_waypoint_ids | List | | Exact | List index | |
+| time_at_waypoint | List | | Approximate | Seconds | |
 | steps | int | \>= 1 | Exact | Steps | steps |
 | progress | float | 0.0 to 100.0 | Exact | Percent | progress |
 | time | float | \>= 0.0 | Approximate | Seconds |
@@ -88,6 +89,8 @@ Note: Regarding the edge of the track, remember that the car is still on the tra
 - **next_waypoint_x** / **y** / **id** - Similarly, the x, y and index of the waypoint immediately in front of the car
 - **distance_from_closest_waypoint** - The distance of the car from the closest waypoint
 - **just_passed_waypoint_ids** - A list of waypoint index(es) just passed (each waypoint is only passed at most once per episode)
+- **time_at_waypoint** - A list of the **time** when each waypoint was passed in this episode - or _None_ if the waypoint is not yet passed - the list index is the waypoint id
+
 #### Progress Indications
 - **steps** - Number of steps completed so far in this episode, including this step (so it's basically the step number)
 - **progress** - Progress towards a complete lap as a percentage in the range 0 to 100
