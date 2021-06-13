@@ -53,6 +53,9 @@ class RealWorld:
     BOX_OBSTACLE_WIDTH = 0.38
     BOX_OBSTACLE_LENGTH = 0.24
 
+    MAX_SPEEDS = [None, 0.01, 0.02, 0.04, 0.1, 0.15, 0.25, 0.4, 0.55, 0.75, 0.95, 1.2, 1.4, 1.6, 1.8, 2.0,
+                  2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]
+
 
 # -------------------------------------------------------------------------------
 #
@@ -297,6 +300,7 @@ class Framework:
         self.just_passed_waypoint_ids = []
         self.time_at_waypoint = []
         self.projected_distance = 0.0
+        self.max_possible_track_speed = 0.0
 
         # New stuff for OA ################################
         self.has_objects = False
@@ -372,6 +376,8 @@ class Framework:
         self.track_bearing = get_bearing_between_points(
             (self.previous_waypoint_x, self.previous_waypoint_y),
             (self.next_waypoint_x, self.next_waypoint_y))
+
+        self.max_possible_track_speed = RealWorld.MAX_SPEEDS[min(self.steps, len(RealWorld.MAX_SPEEDS) - 1)]
 
         self.objects_location = params[ParamNames.OBJECTS_LOCATION]
 
@@ -735,8 +741,6 @@ framework_global = None
 #
 # -------------------------------------------------------------------------------
 
-def get_reward(framework: Framework):
-    if len(framework.just_passed_waypoint_ids) >= 1:
-        return len(framework.just_passed_waypoint_ids) * 1000 + sum(framework.just_passed_waypoint_ids)
-    else:
-        return 0.01
+def get_reward(f: Framework):
+    print(f.max_possible_track_speed, round(f.projected_distance, 1))
+    return f.progress_speed / f.max_possible_track_speed * f.projected_distance + f.steps / 10
