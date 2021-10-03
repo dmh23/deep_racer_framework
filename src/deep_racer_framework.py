@@ -1,7 +1,7 @@
 #
 # DeepRacer Framework
 #
-# Version 1.1.0
+# Version 1.2.0
 #
 # Copyright (c) 2021 dmh23
 #
@@ -53,8 +53,10 @@ class RealWorld:
     BOX_OBSTACLE_WIDTH = 0.38
     BOX_OBSTACLE_LENGTH = 0.24
 
-    MAX_SPEEDS = [None, 0.01, 0.02, 0.04, 0.1, 0.15, 0.25, 0.4, 0.55, 0.75, 0.95, 1.2, 1.4, 1.6, 1.8, 2.0,
-                  2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]
+    MAX_SPEEDS = [None, 0.01, 0.02, 0.04, 0.1, 0.15, 0.25, 0.4, 0.6, 0.9, 1.1, 1.3, 1.5, 1.7, 2.0, 2.2,
+                  2.3, 2.6, 2.7, 3.1, 3.3, 3.4, 3.6, 3.8, 4.0]
+
+    SAFE_CAR_OVERHANG = min(VEHICLE_LENGTH, VEHICLE_WIDTH) / 2
 
 
 # -------------------------------------------------------------------------------
@@ -110,7 +112,6 @@ def get_point_at_bearing(start_point, bearing: float, distance: float):
     y2 = y + math.sin(radians_to_target) * distance
 
     return x2, y2
-
 
 
 # Intersection of two lines comes from Wikipedia
@@ -184,7 +185,6 @@ def get_processed_waypoints(waypoints, track_width):
     right_safe = previous
 
     edge_error_tolerance = 0.01
-    safe_car_overhang = min(RealWorld.VEHICLE_LENGTH, RealWorld.VEHICLE_WIDTH) / 2
 
     processed_waypoints = []
 
@@ -199,11 +199,11 @@ def get_processed_waypoints(waypoints, track_width):
             previous_left = left_safe
             previous_right = right_safe
 
-            left_safe = get_edge_point(previous, w, future, 90, track_width / 2 + safe_car_overhang)
+            left_safe = get_edge_point(previous, w, future, 90, track_width / 2 + RealWorld.SAFE_CAR_OVERHANG)
             if get_distance_between_points(previous_left, left_safe) < edge_error_tolerance:
                 left_safe = previous_left
 
-            right_safe = get_edge_point(previous, w, future, -90, track_width / 2 + safe_car_overhang)
+            right_safe = get_edge_point(previous, w, future, -90, track_width / 2 + RealWorld.SAFE_CAR_OVERHANG)
             if get_distance_between_points(previous_right, right_safe) < edge_error_tolerance:
                 right_safe = previous_right
 
@@ -245,13 +245,15 @@ class HistoricStep:
 class Framework:
     def __init__(self, params):
         # Real PRIVATE variables set here
-        self._processed_waypoints = get_processed_waypoints(params[ParamNames.WAYPOINTS], params[ParamNames.TRACK_WIDTH])
+        self._processed_waypoints = get_processed_waypoints(params[ParamNames.WAYPOINTS],
+                                                            params[ParamNames.TRACK_WIDTH])
         self._history = []
         self._previous_front_object = -1
 
         # Definitions only of variables to use in your reward method, real values are set during process_params()
         self.x = 0.0
         self.y = 0.0
+        self.start_waypoint_id = 0
         self.all_wheels_on_track = True
         self.previous_waypoint_id = 0
         self.previous_waypoint_x = 0.0
@@ -282,6 +284,7 @@ class Framework:
         self.track_width = 0.0
         self.track_speed = 0.0
         self.progress_speed = 0.0
+        # self.progress_speeds = []
         self.action_speed = 0.0
         self.action_steering_angle = 0.0
         self.action_sequence_length = 0
@@ -300,7 +303,10 @@ class Framework:
         self.just_passed_waypoint_ids = []
         self.time_at_waypoint = []
         self.projected_distance = 0.0
+        self.projected_progress_distance = 0.0
+        self.projected_finish_left = False
         self.max_possible_track_speed = 0.0
+        self.corner_cutting = 0.0
 
         # New stuff for OA ################################
         self.has_objects = False
@@ -432,6 +438,23 @@ class Framework:
 
             self.just_passed_waypoint_ids = self._get_just_passed_waypoint_ids(
                 previous_step.next_waypoint_id, self.next_waypoint_id)
+
+            progress_gain = self.progress - previous_step.progress
+            if progress_gain < 0:
+                self.corner_cutting = 0
+            elif this_step.distance == 0:
+                self.corner_cutting = 1
+            else:
+                progress_distance = progress_gain / 100 * self.track_length
+                self.corner_cutting = progress_distance / this_step.distance
+
+            # New speeds stuff
+            # self.progress_speeds = []
+            # for period in range(1, min(10, len(self._history))):
+            #     progress_speed_distance = (self.progress - self._history[-period - 1].progress) / 100 * self.track_length
+            #     progress_speed_calculate_time = period / RealWorld.STEPS_PER_SECOND
+            #     self.progress_speeds.append(max(0.0, progress_speed_distance / progress_speed_calculate_time))
+
         else:
             self.action_sequence_length = 1
             self.true_bearing = self.heading
@@ -440,6 +463,11 @@ class Framework:
             self.total_distance = 0.0
             self.max_skew = 0.0
             self.max_slide = 0.0
+            self.just_passed_waypoint_ids = []
+            self.start_waypoint_id = self.closest_waypoint_id
+            if len(self.time_at_waypoint) > self.start_waypoint_id:    # FUDGE TO PASS VALIDATION IN CONSOLE
+                self.time_at_waypoint[self.start_waypoint_id] = self.time
+            self.corner_cutting = 1
 
         self.slide = get_turn_between_directions(self.heading, self.true_bearing)
         self.skew = get_turn_between_directions(self.track_bearing, self.true_bearing)
@@ -468,8 +496,10 @@ class Framework:
 
             self._previous_front_object = self.front_object_id
 
-            self.distance_to_front_object = get_distance_between_points((self.x, self.y), object_locations[self.front_object_id])
-            self.distance_to_rear_object = get_distance_between_points((self.x, self.y), object_locations[self.rear_object_id])
+            self.distance_to_front_object = get_distance_between_points((self.x, self.y),
+                                                                        object_locations[self.front_object_id])
+            self.distance_to_rear_object = get_distance_between_points((self.x, self.y),
+                                                                       object_locations[self.rear_object_id])
 
             self.front_object_is_left_of_centre = objects_left_of_center[self.front_object_id]
             self.rear_object_is_left_of_centre = objects_left_of_center[self.rear_object_id]
@@ -487,7 +517,7 @@ class Framework:
         #
 
         self.projected_hit_object = False
-        self.projected_distance = self._calculate_projected_distance_on_track()
+        self.projected_distance, self.projected_progress_distance, self.projected_finish_left = self._calculate_projected_distance_on_track()
         if self.has_objects:
             object_hit_distance = self._calculate_object_hit_distance(object_locations[self.front_object_id])
             if object_hit_distance is not None and object_hit_distance < self.projected_distance:
@@ -508,17 +538,42 @@ class Framework:
         previous_left = self._processed_waypoints[self.previous_waypoint_id].left_safe
         previous_right = self._processed_waypoints[self.previous_waypoint_id].right_safe
 
+        (previous_progress_distance, next_progress_distance) = self._calculate_progress_distances(
+            point, self.waypoints[self.previous_waypoint_id], self.waypoints[self.next_waypoint_id],
+            self.is_left_of_center, self.distance_from_center)
+        progress_distance = 0.0
+        is_first_step = True
+
+        previous_waypoint = self.waypoints[self.previous_waypoint_id]
         for w in self._processed_waypoints[self.next_waypoint_id:] + self._processed_waypoints[:self.next_waypoint_id]:
-            off_track_distance = self._get_off_track_distance(point, heading, previous_left, previous_right, w)
+            off_track_distance, off_track_point, off_left = self._get_off_track_distance_and_point(point, heading,
+                                                                                                   previous_left,
+                                                                                                   previous_right, w)
 
             if off_track_distance is None:
                 previous_left = w.left_safe
                 previous_right = w.right_safe
+                if is_first_step:
+                    is_first_step = False
+                    progress_distance = next_progress_distance
+                else:
+                    progress_distance += get_distance_between_points((w.x, w.y), previous_waypoint)
+                previous_waypoint = (w.x, w.y)
+            elif off_track_distance == 0.0:
+                return 0.0, 0.0, False
             else:
-                return off_track_distance
+                (final_previous_progress_distance, final_next_progress_distance) = self._calculate_progress_distances(
+                    off_track_point, previous_waypoint, (w.x, w.y), off_left,
+                    self.track_width / 2 + RealWorld.SAFE_CAR_OVERHANG)
+
+                if is_first_step:
+                    progress_distance = next_progress_distance - final_next_progress_distance
+                else:
+                    progress_distance += final_previous_progress_distance
+                return off_track_distance, progress_distance, off_left
 
     @staticmethod
-    def _get_off_track_distance(point, heading: float, previous_left, previous_right, processed_waypoint):
+    def _get_off_track_distance_and_point(point, heading: float, previous_left, previous_right, processed_waypoint):
         left_safe = processed_waypoint.left_safe
         right_safe = processed_waypoint.right_safe
 
@@ -529,7 +584,7 @@ class Framework:
         relative_direction_to_right_target = get_turn_between_directions(heading, direction_to_right_target)
 
         if relative_direction_to_left_target >= 0 and relative_direction_to_right_target <= 0:
-            return None
+            return None, None, None
         else:
             point2 = get_point_at_bearing(point, heading, 1)  # Just some random distance (1m)
             if left_safe == previous_left:
@@ -545,17 +600,44 @@ class Framework:
             right_bearing = get_bearing_between_points(point, off_track_right)
 
             distances = []
+            end_points = []
+            off_left = []
             if abs(get_turn_between_directions(left_bearing, heading)) < 1:
                 if is_point_between(off_track_left, left_safe, previous_left):
                     distances += [get_distance_between_points(point, off_track_left)]
+                    end_points += [off_track_left]
+                    off_left += [True]
             if abs(get_turn_between_directions(right_bearing, heading)) < 1:
                 if is_point_between(off_track_right, right_safe, previous_right):
                     distances += [get_distance_between_points(point, off_track_right)]
+                    end_points += [off_track_right]
+                    off_left += [False]
 
-            if len(distances) > 0:
-                return max(distances)
+            if len(distances) == 2 and distances[1] > distances[0]:
+                return distances[1], end_points[1], off_left[1]
+            elif len(distances) > 0:
+                return distances[0], end_points[0], off_left[0]
             else:
-                return 0.0
+                return 0.0, None, None
+
+    @staticmethod
+    def _calculate_progress_distances(point, previous_waypoint, next_waypoint,
+                                      is_left, distance_from_centre):
+        track_bearing = get_bearing_between_points(previous_waypoint, next_waypoint)
+
+        if is_left:
+            offset = -90
+        else:
+            offset = 90
+
+        radians_to_centre_point = math.radians(track_bearing + offset)
+
+        (x, y) = point
+        centre_point = (x + math.cos(radians_to_centre_point) * distance_from_centre,
+                        y + math.sin(radians_to_centre_point) * distance_from_centre)
+
+        return get_distance_between_points(centre_point, previous_waypoint), get_distance_between_points(centre_point,
+                                                                                                         next_waypoint)
 
     def _calculate_object_hit_distance(self, obj_middle):
         heading = get_angle_in_proper_range(self.true_bearing)
@@ -567,14 +649,15 @@ class Framework:
 
         front_middle = get_point_at_bearing(obj_middle, track_bearing, RealWorld.BOX_OBSTACLE_LENGTH / 2 + safe_border)
         front_left = get_point_at_bearing(front_middle, track_bearing + 90,
-                                                   RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
+                                          RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
         front_right = get_point_at_bearing(front_middle, track_bearing - 90,
-                                                    RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
+                                           RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
 
         rear_middle = get_point_at_bearing(obj_middle, track_bearing, -RealWorld.BOX_OBSTACLE_LENGTH / 2 - safe_border)
-        rear_left = get_point_at_bearing(rear_middle, track_bearing + 90, RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
+        rear_left = get_point_at_bearing(rear_middle, track_bearing + 90,
+                                         RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
         rear_right = get_point_at_bearing(rear_middle, track_bearing - 90,
-                                                   RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
+                                          RealWorld.BOX_OBSTACLE_WIDTH / 2 + safe_border)
 
         distances = []
         for box_side in [(front_left, front_right), (rear_left, rear_right),
@@ -630,7 +713,7 @@ class Framework:
         else:
             next_ratio = get_distance_between_points(point, next_waypoint) / target_dist
 
-        if prefer_forwards:   # Make the behind waypoint appear 5% further away
+        if prefer_forwards:  # Make the behind waypoint appear 5% further away
             previous_ratio *= 1.05
 
         if previous_ratio > next_ratio:
@@ -670,6 +753,18 @@ class Framework:
             return result
         else:
             return []
+
+    def get_track_distance_between_waypoints(self, start: int, finish: int):
+        distance = 0
+        assert 0 <= start < len(self.waypoints)
+        assert 0 <= finish < len(self.waypoints)
+
+        while start != finish:
+            next_wp = self._get_next_waypoint_id(start)
+            distance += get_distance_between_points(self.waypoints[start], self.waypoints[next_wp])
+            start = next_wp
+
+        return distance
 
     def print_debug(self):
         print("x, y                      ", round(self.x, 3), round(self.y, 3))

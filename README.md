@@ -1,4 +1,4 @@
-# deep_racer_framework v1.0.3
+# deep_racer_framework v1.2.0
 
 ## Introduction
 
@@ -47,6 +47,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | is_reversed | bool |  True or False | Exact | | is_reversed |
 | is_complete_lap | bool | True or False | Exact |
 | track_speed | float | \>= 0.0 | Approximate | Meters per Second |
+| max_possible_track_speed | float | \> 0.0 | Approximate | Meters per Second |
 | progress_speed | float | \>= 0.0 | Approximate | Meters per Second |
 | action_speed | float | \> 0.0 | Exact | Meters per Second | speed |
 | action_steering_angle | float | -30.0 to 30.0 | Exact | Degrees | steering_angle |
@@ -57,13 +58,25 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | heading | float | -180.0 to 180.0 | Exact | Degrees | heading |
 | track_bearing | float | -180.0 to 180.0 | Exact | Degrees |
 | true_bearing | float | -180.0 to 180.0 | Approximate | Degrees |
+| projected_distance | float | \>= 0.0 | Approximate | Meters |
+| projected_progress_distance | float | \>= 0.0 | Approximate | Meters |
+| projected_finish_left | bool | True or False | Approximate |
 | slide | float | -180.0 to 180.0 | Approximate | Degrees |
 | skew | float | -180.0 to 180.0 | Approximate | Degrees |
 | max_slide | float | -180.0 to 180.0 | Approximate | Degrees |
 | max_skew | float | -180.0 to 180.0 | Approximate | Degrees |
 | track_length | float | \>= 0.0 | Exact | Meters | track_length |
 | track_width | float | \>= 0.0 | Exact | Meters | track_width |
-
+| has_objects | bool | True or False | Exact |
+| objects_location | TODO |
+| front_object_id | TODO |
+| distance_to_front_object | TODO |
+| front_object_is_left_of_centre | TODO |
+| rear_object_id | TODO |
+| distance_to_rear_object | TODO |
+| rear_object_is_left_of_centre | TODO |
+| step_when_passed_object | TODO |
+| projected_hit_object | TODO |
 
 ## Parameters - Explained
 
@@ -109,6 +122,7 @@ Note: All values of these are _false_ until the very last step, when these are s
 
 #### Actual Speed
 - **track_speed** - The speed the car is currently actually travelling at
+- **max_possible_track_speed** - An estimate of the maximum possible track speed for the number of steps completed so far (it takes approximately 25 steps to reach a potential top speed of 4 m/s)
 - **progress_speed** - The speed of the car relative to the center line; if the car is travelling along the centre line, then it will be the same as the **track_speed**; if it is cutting a corner, the **progress_speed** will be higher; or if it is going sideways or taking the outside of a corner, then the **progress_speed** will be lower
 
 Note: These are real measures of the car's speed, unlike the **action_speed**, see below  
@@ -129,6 +143,14 @@ Note: A sequence length of 1 means the chosen action is different from the last 
 - **track_bearing** - The bearing of the track in degrees, based on the waypoints / center line
 - **true_bearing** - The actual bearing the car is travelling along, which might differ from the **heading** especially on bends, or if the car is out of control (spinning etc.)
 
+#### Projections
+- **projected_distance** - The remaining distance the car will travel before coming off the track or hitting an object if it continues at the current **true_bearing**
+- **projected_progress_distance** - The remaining distance the car will travel relative to the centre line before coming off the track or hitting an object if it continues at the current **true_bearing**
+- **projected_finish_left** - Value of _true_ means the car will come off track or hit an object on the left-hand side if it continues at the current **true_bearing**
+- **projected_hit_object** - See "Object Avoidance", below
+
+Note: The **projected_progress_distance** is a similar concept to the **progress_speed** as described above, i.e. it measures the likely "progress" of the car along the waypoints
+
 ####  Indications of Sliding/Skidding etc.
 - **slide** - The difference in degrees between **heading** and **true_bearing**, you decide what is reasonable but typically somewhere between 10 and 20 degrees difference marks the change from controlled behaviour to sliding/skidding/spinning (i.e. uncontrolled, unless you want to encourage rally turns round a tight corner!)
 - **skew** - The difference in degrees between **track_bearing** and **true_bearing**, so a value close to zero indicates the car is following the track center line (which might be good for straight sections), whereas higher values indicate driving across the track (which might be good for cutting corners)
@@ -139,24 +161,16 @@ Note: A sequence length of 1 means the chosen action is different from the last 
 - **track_length** - Total length of the track (measured along the waypoints / center line)
 - **track_width** - Width of the track
 
+#### Object Avoidance
+- **has_objects** - Value of _true_ means there are objects to be avoided
+- **objects_location** - An array of the location of every object, same as the AWS DeepRacer parameter
+- **front_object_id** - The index number of the closest object in front of the car (use this index to access the **objects_location**)
+- **distance_to_front_object** - The distance to the closest object in front of the car
+- **front_object_is_left_of_centre** - Value of _true_ means the closest object in front of the car is on the left side
+- **rear_object_id** - The index number of the closest object behind the car (use this index to access the **objects_location** or **step_when_passed_object**)
+- **distance_to_rear_object** - The distance to the closest object behind the car
+- **rear_object_is_left_of_centre** - Value of _true_ means the closest object behind the car is on the left side
+- **step_when_passed_object** - An array indicating which at which step each object was passed (a value of _None_ means the object is not yet passed)
+- **projected_hit_object** - Value of _true_ means the car is on a direct course to crash into an object (based on the **true_bearing**)
 
-## Planned New Features for V2.0
-
-Support for the remaining AWS DeepRacer native parameters and associated concepts:
-- projection_distance  
-- closest_objects  
-- objects_distance  
-- objects_distance_from_center  
-- objects_heading  
-- objects_left_of_center  
-- objects_location  
-- objects_speed  
-- object_in_camera  
-
-Plus, hopefully:
-- track shape analysis
-- predicted path analysis
-- camera visibility analysis
-- section speed calculations
-- *... and hopefully lots more ideas ...*
 
