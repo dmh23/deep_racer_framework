@@ -58,6 +58,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | heading | float | -180.0 to 180.0 | Exact | Degrees | heading |
 | track_bearing | float | -180.0 to 180.0 | Exact | Degrees |
 | true_bearing | float | -180.0 to 180.0 | Approximate | Degrees |
+| corner_cutting | float | \>= 0.0 | Exact |
 | projected_distance | float | \>= 0.0 | Approximate | Meters |
 | projected_progress_distance | float | \>= 0.0 | Approximate | Meters |
 | projected_finish_left | bool | True or False | Approximate |
@@ -68,7 +69,7 @@ For a few simple ideas of what's possible in a reward function, see the "src/exa
 | track_length | float | \>= 0.0 | Exact | Meters | track_length |
 | track_width | float | \>= 0.0 | Exact | Meters | track_width |
 | has_objects | bool | True or False | Exact |
-| objects_location | TODO |
+| objects_location | TODO | | | | objects_location |
 | front_object_id | TODO |
 | distance_to_front_object | TODO |
 | front_object_is_left_of_centre | TODO |
@@ -142,6 +143,7 @@ Note: A sequence length of 1 means the chosen action is different from the last 
 - **heading** - The heading of the car in degrees, which means this is where the car is "pointing" (also think of this as being the direction the camera is "looking")
 - **track_bearing** - The bearing of the track in degrees, based on the waypoints / center line
 - **true_bearing** - The actual bearing the car is travelling along, which might differ from the **heading** especially on bends, or if the car is out of control (spinning etc.)
+- **corner_cutting** - TODO
 
 #### Projections
 - **projected_distance** - The remaining distance the car will travel before coming off the track or hitting an object if it continues at the current **true_bearing**
