@@ -122,7 +122,7 @@ Note: All values of these are _false_ until the very last step, when these are s
 
 #### Actual Speed
 - **track_speed** - The speed the car is currently actually travelling at
-- **max_possible_track_speed** - An estimate of the maximum possible track speed for the number of steps completed so far (it takes approximately 25 steps to reach a potential top speed of 4 m/s)
+- **max_possible_track_speed** - An estimate of the maximum possible **track_speed** for the number of steps completed so far (it takes approximately 25 steps to reach a potential top speed of 4 m/s)
 - **progress_speed** - The speed of the car relative to the center line; if the car is travelling along the centre line, then it will be the same as the **track_speed**; if it is cutting a corner, the **progress_speed** will be higher; or if it is going sideways or taking the outside of a corner, then the **progress_speed** will be lower
 
 Note: These are real measures of the car's speed, unlike the **action_speed**, see below  
