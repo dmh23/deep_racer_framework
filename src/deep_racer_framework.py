@@ -766,6 +766,15 @@ class Framework:
 
         return distance
 
+    def get_progress_speed(self, steps: int):
+        assert steps >= 1
+        if steps >= len(self._history):
+            return None
+
+        progress_speed_distance = (self.progress - self._history[-steps - 1].progress) / 100 * self.track_length
+        progress_speed_calculate_time = steps / RealWorld.STEPS_PER_SECOND
+        return max(0.0, progress_speed_distance / progress_speed_calculate_time)
+
     def print_debug(self):
         print("x, y                      ", round(self.x, 3), round(self.y, 3))
         print("all_wheels_on_track       ", self.all_wheels_on_track)
