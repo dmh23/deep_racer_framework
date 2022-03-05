@@ -229,6 +229,7 @@ class HistoricStep:
         self.action_steering_angle = framework.action_steering_angle
         self.closest_waypoint_id = framework.closest_waypoint_id
         self.next_waypoint_id = framework.next_waypoint_id
+        self.slide = framework.slide
 
         if previous_step:
             self.distance = get_distance_between_points((previous_step.x, previous_step.y), (self.x, self.y))
@@ -297,6 +298,7 @@ class Framework:
         self.slide = 0.0
         self.skew = 0.0
         self.max_slide = 0.0
+        self.recent_max_slide = 0.0
         self.max_skew = 0.0
         self.total_distance = 0.0
         self.objects_location = []
@@ -448,12 +450,10 @@ class Framework:
                 progress_distance = progress_gain / 100 * self.track_length
                 self.corner_cutting = progress_distance / this_step.distance
 
-            # New speeds stuff
-            # self.progress_speeds = []
-            # for period in range(1, min(10, len(self._history))):
-            #     progress_speed_distance = (self.progress - self._history[-period - 1].progress) / 100 * self.track_length
-            #     progress_speed_calculate_time = period / RealWorld.STEPS_PER_SECOND
-            #     self.progress_speeds.append(max(0.0, progress_speed_distance / progress_speed_calculate_time))
+            self.recent_max_slide = 0.0
+            for h in self._history[-4:]:
+                if abs(h.slide) > abs(self.recent_max_slide):
+                    self.recent_max_slide = h.slide
 
         else:
             self.action_sequence_length = 1
@@ -463,6 +463,7 @@ class Framework:
             self.total_distance = 0.0
             self.max_skew = 0.0
             self.max_slide = 0.0
+            self.recent_max_slide = 0.0
             self.just_passed_waypoint_ids = []
             self.start_waypoint_id = self.closest_waypoint_id
             if len(self.time_at_waypoint) > self.start_waypoint_id:    # FUDGE TO PASS VALIDATION IN CONSOLE
@@ -806,7 +807,8 @@ class Framework:
         print("heading                   ", round(self.heading, 2))
         print("track_bearing             ", round(self.track_bearing, 2))
         print("true_bearing              ", round(self.true_bearing, 2))
-        print("slide  / max_slide        ", round(self.slide, 2), round(self.max_slide, 2))
+        print("slide  / max / recent     ",
+              round(self.slide, 2), round(self.max_slide, 2), round(self.recent_max_slide, 2))
         print("skew / max_skew           ", round(self.skew, 2), round(self.max_skew, 2))
         print("total_distance            ", round(self.total_distance, 2))
         print("track_speed               ", round(self.track_speed, 2))
